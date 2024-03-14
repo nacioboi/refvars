@@ -1,0 +1,5 @@
+/.vscode
+/.token
+/dist
+/build
+/*.egg-info
