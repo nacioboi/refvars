@@ -1,7 +1,7 @@
-from refvars import Reference
+from refvars import Make_Reference
 
 # Create a reference to a string.
-ref = Reference("Hello, World!")
+ref = Make_Reference("Hello, World!").reference
 
 # Get the value of the reference.
-print(ref()) # Hello, World!
+print(ref.get()) # Hello, World!

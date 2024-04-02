@@ -1,10 +1,12 @@
-# If you're editor supports, we can use type hints to help intellisense.
+from refvars import Make_Reference
 
-from refvars import Reference
+#
+# If you're editor supports, we can use type hints to help intellisense.
+#
 
 # Create a reference to a string.
-ref = Reference[str]("Hello, World!")  # Notice the type hint.
+ref = Make_Reference[str]("Hello, World!").reference  # Notice the type hint.
 
 # Get the value of the reference.
-print(ref())  # Hello, World!
+print(ref.get())  # Hello, World!
 

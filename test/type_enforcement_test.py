@@ -1,5 +1,7 @@
-from refvars import Reference
+from refvars import Make_Reference
 
-x = Reference[int](0)
+x = Make_Reference[int](0).reference
 
-x.set(3.14) # TypeError: Argument 1 of Reference.set is not of type int
+# NOTE: The below should raise a TypeError.
+# NOTE:  This is intended behavior, hence the `#type:ignore` comment.
+x.set(3.14) #type:ignore
