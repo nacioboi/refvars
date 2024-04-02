@@ -10,7 +10,7 @@ class Version:
 	notes: str|None
 	def validate(self):
 		s = self.version_number.split(".")
-		if not len(s) == 3:
+		if not len(s) == 2:
 			raise ValueError("Version number must have 3 parts.")
 		for i in s:
 			if not i.isdigit():
@@ -26,7 +26,7 @@ import os
 
 CURRENT_VERSION = Version(
 	date=Normal_People_Date(2, 4, 2024),
-	version_number="0.0.1",
+	version_number="0.1",
 	notes="Added basic runtime type checking and other minor improvements."
 )
 CURRENT_VERSION.validate()
@@ -82,23 +82,6 @@ def get_y_n(question:str) -> bool:
 		else:
 			print("Please enter 'y' or 'n'.")
 
-def get_token_path() -> str:
-	while True:
-		token_path = input("Enter the path to your PyPi token file: ")
-		if not os.path.exists(token_path):
-			print("File not found.")
-			continue
-		print(f"File found: [{token_path}]")
-		y_n = get_y_n("Is this the correct file? (y/n) ")
-		if not y_n:
-			continue
-		else:
-			return token_path
-
-		
-
-
-
 do_publish = get_y_n("Would you like to publish to PyPi? (y/n) ")
 if not do_publish:
 	exit(0)
@@ -107,6 +90,4 @@ again_to_be_sure = get_y_n("ARE YOU SURE? Remember, you can't unpublish. (y/n) "
 if not again_to_be_sure:
 	exit(0)
 
-token_path = get_token_path()
-
-os.system(f"twine upload --repository pypi --config-file {token_path} dist/*")
+os.system(f"python -m twine upload --repository pypi dist/*")
