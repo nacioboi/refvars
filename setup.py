@@ -18,7 +18,7 @@ class Version:
 	def __repr__(self) -> str:
 		return f"V = [{self.version_number} released on {self.date}] & NOTES = ((( {self.notes} )))"
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import sys
 import os
 
@@ -26,7 +26,7 @@ import os
 
 CURRENT_VERSION = Version(
 	date=Normal_People_Date(2, 4, 2024),
-	version_number="0.1",
+	version_number="0.2",
 	notes="Added basic runtime type checking and other minor improvements."
 )
 CURRENT_VERSION.validate()
@@ -36,9 +36,10 @@ DESCRIPTION += f"Solving pythons biggest problem. Reference types (output variab
 DESCRIPTION += f"This release: {repr(CURRENT_VERSION)} :D"
 
 
-print(len(sys.argv))
+
 if len(sys.argv) == 1:
-	sys.argv.append("build")
+	sys.argv.append("sdist")
+	sys.argv.append("bdist_wheel")
 
 
 
@@ -58,16 +59,16 @@ setup(
 	],
 	author="matrikater (Joel C. Watson)",
 	author_email="matrikater@matriko.xyz",
-	description="Solving pythons biggest problem. Reference types (output variables/pointers) are not implemented.\n{}",
+	description=DESCRIPTION,
 	classifiers=[
 		"Development Status :: 3 - Alpha",
 		"Intended Audience :: Developers",
-		"License :: GPL-2.0",
 		"Programming Language :: Python :: 3",
 		"Operating System :: OS Independent",
 		"Natural Language :: English",
 		"Topic :: Software Development :: Libraries :: Python Modules"
 	],
+	packages=find_packages("refvars"),
 )
 
 
