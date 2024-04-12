@@ -36,7 +36,7 @@ class Version:
 			day_p = "rd"
 		else:
 			day_p = "th"
-		return f"{day_p}/{self.date.month}/{self.date.year}"
+		return f"{self.date.day}{day_p}/{self.date.month}/{self.date.year}"
 
 
 

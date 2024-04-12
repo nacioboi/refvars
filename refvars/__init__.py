@@ -86,16 +86,5 @@ class Make_Reference (Generic[T_PYTHON_REFERENCE]):
 
 
 
-print("HERE", flush=True)
-my_ref = Make_Reference[bool](True).reference
 
-def parse(ref:"Reference_Instance[bool]"):
-	if ref.get() == True:
-		print("The reference is True.")
-	else:
-		print("The reference is False.")
-	
-parse(my_ref)
-my_ref.set(False)
-parse(my_ref)
 

@@ -14,8 +14,8 @@ NOTES += " - The description did not appear on PyPi.\n"
 NOTES += "This version hopefully fixes that."
 
 CURRENT_VERSION = Version(
-	date=Normal_People_Date(9, 4, 2024),
-	version_number="0.5",
+	date=Normal_People_Date(12, 4, 2024),
+	version_number="0.6",
 	notes=parse_notes(NOTES)
 )
 CURRENT_VERSION.validate()
@@ -106,4 +106,18 @@ again_to_be_sure = get_y_n("ARE YOU SURE? Remember, you can't unpublish. (y/n) "
 if not again_to_be_sure:
 	exit(0)
 
-os.system(f"python -m twine upload --verbose --repository pypi dist/*")
+TOKEN = None
+if os.path.exists(".token"):
+	with open(".token", "r") as f:
+		TOKEN = f.read().strip()
+if TOKEN is None:
+	def get_tok() -> str:
+		t = input("Enter your PyPi token: ")
+		if not get_y_n("Please confirm. Is it correct? (y/n) "):
+			return get_tok()
+		return t
+	TOKEN = get_tok()
+	with open(".token", "w") as f:
+		f.write(TOKEN)
+
+os.system(f"python3.11 -m twine upload --verbose --repository pypi -p \"{TOKEN}\" dist/*")
