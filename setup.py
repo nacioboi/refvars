@@ -1,6 +1,6 @@
 from _setup_deps import Version, Normal_People_Date, init_description, get_y_n, parse_notes, clear_screen
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import shutil
 import sys
 import os
@@ -14,8 +14,8 @@ NOTES += " - The description did not appear on PyPi.\n"
 NOTES += "This version hopefully fixes that."
 
 CURRENT_VERSION = Version(
-	date=Normal_People_Date(12, 4, 2024),
-	version_number="0.6",
+	date=Normal_People_Date(29, 5, 2024),
+	version_number="0.7",
 	notes=parse_notes(NOTES)
 )
 CURRENT_VERSION.validate()
@@ -31,7 +31,7 @@ if not os.getcwd().endswith("refvars"):
 
 
 
-simple_path_checks = ["/examples/simple_example.py", "/examples/type_checking_example.py"]
+simple_path_checks = ["/examples/crash_course.py", "/examples/type_checking_example.py"]
 if not all(os.path.exists(os.path.abspath(os.getcwd()+p)) for p in simple_path_checks):
 	raise Exception("This script must be run from the root of the project directory.")
 
@@ -77,6 +77,11 @@ setup(
 		"Natural Language :: English",
 		"Topic :: Software Development :: Libraries :: Python Modules"
 	],
+	packages=find_packages(),
+	include_package_data=True,
+	package_data={
+		'': ["*.dll"]
+	},
 )
 
 

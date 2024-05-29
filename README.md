@@ -1,39 +1,50 @@
 # Python Reference Variables `refvars`
 
-This repository contains but one simple but extremely useful Python class, `Make_Reference` and `Reference_Instance`.
+This repository contains but two simple but extremely useful Python class, `new` and `Reference`.
 
-This holy grail of simple python hacks, `refvars` provides a convenient way to work with references to objects. It allows you to set and get the value of the reference using simple methods.
+**ALSO:** [C Pointers in Python](#c-pointers-in-python).
+
+This holy grail of simple python hacks, `refvars` provides a convenient way to work with references to objects.
+It allows you to set and get the value of the reference using simple `get` and `set` methods.
 
 ## Usage
 
 To use the `refvars` class, simply import it into your Python script:
 
 ```python
-from refvars import Make_Reference, Reference_Instance
+import refvars
 ```
 
-Then use `Make_Reference` to create a reference to an object:
+Then use `new` to create a reference to an object:
 
 ```python
-# Create a reference
-ref = Make_Reference[int](0).reference
+# Create a reference.
+ref = refvars.new[int](0).get_ref()
 ```
 
-> Note that `Make_Reference` will run a variety of runtime AND intellisense time checks to ensure that the reference is being used correctly.
+**Note**: that `new` will run a variety of runtime checks to ensure that the reference is being used correctly.
 
-Now, you can use the `Reference_Instance` to get and set the value of the reference:
+* The way these checks work is by very basic checking of source code.
+* This can lead to some problems when trying to open your source code file with `inspect` module.
+
+To fix this:
+
+```python
+refvars.disable_runtime_usage_checks()
+```
+
+Now, you can use the `Reference` to `get` and `set` the value of the reference:
 
 ```python
 # To ensure that the initial value does actually change.
 print(ref.get())  # 0
 
 # If we want a function to modify the reference, we can pass the reference to the function.
-def modify_reference(ref:"Reference_Instance[int]"):
+def modify_reference(ref:"refvars.Reference[int]"):
     ref.set(1)
 
 modify_reference(ref)
 
-# Now the getting is a bit different.
 print(ref.get())  # 1
 ```
 
@@ -45,10 +56,50 @@ To install the `refvars`, use pip:
 pip install refvars
 ```
 
+## C Pointers in Python
+
+Yes, you heard it right. You can use `refvars` to access memory created by C code in Python.
+
+```python
+from refvars import alloc
+```
+
+The `alloc` is much the same to the `new` class. But instead we use `safe_access(< your cb >)` to safely access the memory.
+
+```python
+from refvars import alloc, Pointer
+
+def callback(ptr:"Pointer") -> None:
+	print(f"Address: {ptr.address}")
+	# We even have basic error handling to stop you from writing more than 64 bytes.
+	more_than_64 = b"X" * 65
+	ptr.write(more_than_64)  # This will raise an error.
+	
+# This allocates 64 bytes of memory.
+# Your callback will be called with a `Pointer` object as the only argument.
+# On function return, the memory will be freed.
+# Meaning that we are (hopefully) safe from memory leaks and cyber attacks.
+alloc(64).safe_access(callback)
+```
+
+A working version you can use is:
+
+```python
+from refvars import alloc, Pointer
+
+def callback(ptr:"Pointer") -> None:
+	print(f"Address: {ptr.address}")
+	data = b"Hello, World!"
+	ptr.write(data)
+	print(ptr.read(len(data)))  # b"Hello, World!"
+
+alloc(1024).safe_access(callback)
+```
+
 ## Confirmed versions of Python
 
-- [x] 3.11 - Works perfectly.
-- [ ] 3.12 - Not tested.
+* [x] 3.11 - Works perfectly on the old version (before c pointer update).
+* [x] 3.12 - Works perfectly.
 
 ## License
 

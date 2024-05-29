@@ -27,12 +27,12 @@ class Version:
 				raise ValueError("Version number must be numeric.")
 
 	def repr_date(self) -> str:
-		day_p = self.date.day
-		if day_p == 1:
+		day_p = str(self.date.day)
+		if day_p.endswith("1"):
 			day_p = "st"
-		elif day_p == 2:
+		elif day_p.endswith("2"):
 			day_p = "nd"
-		elif day_p == 3:
+		elif day_p.endswith("3"):
 			day_p = "rd"
 		else:
 			day_p = "th"
