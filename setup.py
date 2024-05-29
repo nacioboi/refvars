@@ -1,4 +1,4 @@
-from _setup_deps import Version, Normal_People_Date, init_description, get_y_n, parse_notes, clear_screen
+from _setup_deps import Version, Normal_People_Date, init_description, get_y_n, clear_screen
 
 from setuptools import setup, find_packages
 import shutil
