@@ -123,4 +123,4 @@ if TOKEN is None:
 	with open(".token", "w") as f:
 		f.write(TOKEN)
 
-os.system(f"python3.11 -m twine upload --verbose --repository pypi -p \"{TOKEN}\" dist/*")
+os.system(f"{sys.executable} -m twine upload --verbose --repository pypi -p \"{TOKEN}\" dist/*")
