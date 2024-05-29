@@ -40,11 +40,6 @@ class Version:
 
 
 
-def parse_notes(notes:str) -> str:
-	return "\n     |".join(notes.split("\n"))
-
-
-
 def init_description() -> str:
 	description = None
 	with open("README.md", "r") as f:

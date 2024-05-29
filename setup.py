@@ -8,21 +8,19 @@ import os
 
 
 NOTES = "\n"
-NOTES += "Previous V0.2 didn't work.\n"
-NOTES += " - Could not import the module.\n"
-NOTES += " - The description did not appear on PyPi.\n"
-NOTES += "This version hopefully fixes that."
+NOTES += "Redesign and added accessing c pointers from Python.\n"
 
 CURRENT_VERSION = Version(
 	date=Normal_People_Date(29, 5, 2024),
 	version_number="0.7",
-	notes=parse_notes(NOTES)
+	notes=NOTES
 )
 CURRENT_VERSION.validate()
+assert CURRENT_VERSION.notes is not None
 
 LONG_DESCRIPTION = init_description()
 LONG_DESCRIPTION += f"\n## V{CURRENT_VERSION.version_number} released on {CURRENT_VERSION.repr_date()}\n"
-LONG_DESCRIPTION += NOTES
+LONG_DESCRIPTION += CURRENT_VERSION.notes
 
 
 
