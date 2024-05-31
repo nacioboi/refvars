@@ -140,8 +140,8 @@ class Pointer:
 			err_msg += f"Instead, use the class `alloc`.\n"
 			raise SyntaxError(err_msg)
 		
-	def write(self, value_:"bytes"):
-		from ._mem_win_x86 import write
+	def write(self, value_:"bytes") -> None:
+		from .lib_mem import write
 		if len(value_) > self.size:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Out of bounds.\n"
@@ -149,7 +149,7 @@ class Pointer:
 		write(self.address, value_)
 	
 	def read(self, size_:"int") -> "bytes":
-		from ._mem_win_x86 import read
+		from .lib_mem import read
 		if size_ > self.size:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Out of bounds.\n"
@@ -166,35 +166,8 @@ class Pointer:
 
 
 class alloc:
-	def __init__(self, size_:"int"):
-		global _REF_VARS_SPECIAL_SAUCE
-		global _DO_RUNTIME_USAGE_CHECKS
-		try:
-			MAX_MALLOC_SIZE_IN_C = 18_446_744_073_709_551_615  # Unsigned 64-bit integer (unsigned long long).
-			# We need to get the host architecture.
-			from platform import machine
-			arch = machine()
-			if arch != "AMD64":
-				raise NotImplementedError("The `alloc` class is only implemented for the AMD64 architecture.")
-			from os import name
-			if name != "nt":
-				raise NotImplementedError("The `alloc` class is only implemented for the Windows operating system.")
-			if size_ < 0:
-				err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
-				err_msg += f"The size of the memory block must be a positive integer.\n"
-				raise ValueError(err_msg)
-			if size_ > MAX_MALLOC_SIZE_IN_C:
-				err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
-				err_msg += f"The size of the memory block is too large.\n"
-				err_msg += f"Please use a size less than {MAX_MALLOC_SIZE_IN_C}.\n"
-				raise ValueError(err_msg)
-			self.__size = size_
-			self._validate()
-		finally:
-			_REF_VARS_SPECIAL_SAUCE = False
-
-	def safe_access(self, callback_:"Callable[[Pointer],None]"):
-		from ._mem_win_x86 import memory_access
+	def safe_access(self, callback_:"Callable[[Pointer],None]") -> "None":
+		from .lib_mem import memory_access
 		def wrapper(_addr_:int) -> None:
 			nonlocal callback_
 			ptr = Pointer(_addr_, self.__size)
@@ -225,4 +198,23 @@ class alloc:
 			err_msg += f"             On return of the function, the memory will be freed.\n"
 			raise SyntaxError(err_msg)
 		
+	def __init__(self, size_:"int") -> None:
+		global _REF_VARS_SPECIAL_SAUCE
+		global _DO_RUNTIME_USAGE_CHECKS
+		try:
+			MAX_MALLOC_SIZE_IN_C = 18_446_744_073_709_551_615  # Unsigned 64-bit integer (unsigned long long).
+			# We need to get the host architecture.
+			if size_ < 0:
+				err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
+				err_msg += f"The size of the memory block must be a positive integer.\n"
+				raise ValueError(err_msg)
+			if size_ > MAX_MALLOC_SIZE_IN_C:
+				err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
+				err_msg += f"The size of the memory block is too large.\n"
+				err_msg += f"Please use a size less than {MAX_MALLOC_SIZE_IN_C}.\n"
+				raise ValueError(err_msg)
+			self.__size = size_
+			self._validate()
+		finally:
+			_REF_VARS_SPECIAL_SAUCE = False
 

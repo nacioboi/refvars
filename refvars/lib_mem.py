@@ -1,8 +1,18 @@
 import ctypes as _ctypes
 from typing import Callable as _Callable
 from os.path import abspath, exists, join, dirname
+from platform import machine
+from sys import platform
 
-DLL_NAME = "mem_win_x86_lib.dll"
+arch = machine()
+if arch == "AMD64" and platform == "win32":
+	DLL_NAME = "lib_mem_win_x86.dll"
+if arch == "arm64" and platform == "darwin":
+	DLL_NAME = "lib_mem_mac_arm64.dylib"
+else:
+	err_msg = f"Unsupported platform=[{platform}], architecture=[{arch}] combination."
+	raise Exception(err_msg)
+
 BASE_DIR = dirname(__file__)
 DLL_PATH = abspath(join(BASE_DIR, DLL_NAME))
 
