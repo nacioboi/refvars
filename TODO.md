@@ -1,6 +1,7 @@
 # TODO for the `python_reference` repository
 
 - [x] Add the option for runtime type checking.
+- [ ] Add ability to read from starting point in `memlib.c`. This will speed up the process of reading the memory for large memory blocks.
 - [ ] Think of more features or just ways to improve.
 
 ## Bug
