@@ -142,7 +142,7 @@ class Pointer:
 			raise SyntaxError(err_msg)
 		
 	def write(self, value_:"bytes") -> None:
-		from .mem_win_x86 import write
+		from .lib_mem import write
 		if len(value_) > self.size:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Out of bounds.\n"
@@ -150,7 +150,7 @@ class Pointer:
 		write(self.address, value_)
 	
 	def read(self, size_:"int") -> "bytes":
-		from .mem_win_x86 import read
+		from .lib_mem import read
 		if size_ > self.size:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Out of bounds.\n"
@@ -168,7 +168,7 @@ class Pointer:
 
 class alloc:
 	def safe_access(self, callback_:"Callable[[Pointer],None]") -> "None":
-		from .mem_win_x86 import memory_access
+		from .lib_mem import memory_access
 		def wrapper(_addr_:int) -> None:
 			nonlocal callback_
 			ptr = Pointer(_addr_, self.__size)
@@ -205,13 +205,6 @@ class alloc:
 		try:
 			MAX_MALLOC_SIZE_IN_C = 18_446_744_073_709_551_615  # Unsigned 64-bit integer (unsigned long long).
 			# We need to get the host architecture.
-			from platform import machine
-			arch = machine()
-			if arch != "AMD64":
-				raise NotImplementedError("The `alloc` class is only implemented for the AMD64 architecture.")
-			from os import name
-			if name != "nt":
-				raise NotImplementedError("The `alloc` class is only implemented for the Windows operating system.")
 			if size_ < 0:
 				err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 				err_msg += f"The size of the memory block must be a positive integer.\n"

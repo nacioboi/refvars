@@ -2,13 +2,25 @@
 #include <string.h>
 #include <stdio.h>
 
+
+
 typedef char bool;
 
 #define ERR_FAILED_ALLOC 1
 #define ERR_NULL_PTR 2
 #define SUCCESS 0
 
-__declspec(dllexport) int safe_memory_access(bool b_debug_, size_t size_, void (*callback_)(void* ptr_)) {
+
+
+#ifdef _WIN32
+#define DECLARE_EXPORT __declspec(dllexport)
+#else
+#define DECLARE_EXPORT __attribute__((visibility("default")))
+#endif
+
+
+
+DECLARE_EXPORT int safe_memory_access(bool b_debug_, size_t size_, void (*callback_)(void* ptr_)) {
 	void* ptr = malloc(size_);
 	if (!ptr) {
 		return ERR_FAILED_ALLOC;
@@ -24,7 +36,7 @@ __declspec(dllexport) int safe_memory_access(bool b_debug_, size_t size_, void (
 	return SUCCESS;
 }
 
-__declspec(dllexport) int write(bool b_debug_, void* ptr_, const char* data_, size_t size_) {
+DECLARE_EXPORT int write(bool b_debug_, void* ptr_, const char* data_, size_t size_) {
 	if (!ptr_) {
 		return ERR_NULL_PTR;
 	}
@@ -35,7 +47,7 @@ __declspec(dllexport) int write(bool b_debug_, void* ptr_, const char* data_, si
 	return SUCCESS;
 }
 
-__declspec(dllexport) char* read(bool b_debug_, void* ptr_, size_t size_) {
+DECLARE_EXPORT char* read(bool b_debug_, void* ptr_, size_t size_) {
 	if (!ptr_) {
 		return NULL;
 	}
