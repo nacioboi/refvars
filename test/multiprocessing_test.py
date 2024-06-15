@@ -7,7 +7,7 @@ from refvars import new, Reference
 
 def worker(shared_d:"dict[str,Reference]"):
 	my_ref = shared_d["my_ref"]
-	my_ref.set(my_ref.get() + "!")
+	my_ref.set(my_ref.value + "!")
 
 def main():
 	ref = new[str]("Hello, World!").get_ref()

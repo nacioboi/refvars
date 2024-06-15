@@ -14,7 +14,7 @@ For eg, the bug happens when attaching a debugger to the code.
 
 ## Cool features
 
-- [ ] Add a `List_Of_References` class that will add useful functions like:
+- [x] Add a `List_Of_References` class that will add useful functions like:
   - `remove`,
   - `append`,
   - `insert`,
@@ -96,4 +96,4 @@ def print_dots_and_wait():
 
 Notice how the only change is in the type of `THREADS`.
 
-- [ ] Add `Union` type support.
+- [x] Add `Union` type support.
