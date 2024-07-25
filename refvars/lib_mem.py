@@ -104,8 +104,42 @@ def read(ptr_:"int", size_:"int"):
 
 
 
-if __name__ == "__main__":
-	def callback(addr:int) -> None:
-		print(f"Address: {addr}")
-		
-	memory_access(64, callback)
+__start_mmf_service = __lib.start_mmf_service
+__start_mmf_service.argtypes = [_ctypes.c_bool, _ctypes.c_char_p, _ctypes.c_int, _ctypes.c_int]
+__start_mmf_service.restype = _ctypes.c_int
+
+__stop_mmf_service = __lib.stop_mmf_service
+__stop_mmf_service.argtypes = [_ctypes.c_bool]
+__stop_mmf_service.restype = _ctypes.c_int
+
+__get_mmf_ptr = __lib.get_mmf_ptr
+__get_mmf_ptr.argtypes = [_ctypes.c_bool]
+__get_mmf_ptr.restype = _ctypes.c_void_p
+
+__grow_mmf_service = __lib.grow_mmf_service
+__grow_mmf_service.argtypes = [_ctypes.c_bool, _ctypes.POINTER(_ctypes.c_char), _ctypes.c_int, _ctypes.c_int]
+__grow_mmf_service.restype = _ctypes.c_int
+
+__shrink_mmf_service = __lib.shrink_mmf_service
+__shrink_mmf_service.argtypes = [_ctypes.c_bool, _ctypes.POINTER(_ctypes.c_char), _ctypes.c_int, _ctypes.c_int]
+__shrink_mmf_service.restype = _ctypes.c_int
+
+def start_mmf_service(name, size_low, size_high):
+	return __start_mmf_service(__DEBUG, name, size_low, size_high)
+
+def stop_mmf_service():
+	return __stop_mmf_service(__DEBUG)
+
+def grow_mmf_service(name, size_low, size_high):
+	return __grow_mmf_service(__DEBUG, name, size_low, size_high)
+
+def shrink_mmf_service(name, size_low, size_high):
+	return __shrink_mmf_service(__DEBUG, name, size_low, size_high)
+
+def get_mmf_ptr() -> "int":
+	res = __get_mmf_ptr(__DEBUG)
+	if not res:
+		raise MemoryError("Failed to get MMF pointer.")
+	return res
+
+
