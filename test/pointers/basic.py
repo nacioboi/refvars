@@ -8,7 +8,7 @@ def out_of_bounds_callback(ptr:"Pointer") -> "None":
 	print(f"Address: {ptr.address}")
 	data = b"hello world!\0"
 	ptr.write(data)
-	print(ptr.read_until_null_byte())
+	print(ptr.read_str())
 
 alloc(64).safe_access(out_of_bounds_callback)
 

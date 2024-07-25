@@ -36,6 +36,28 @@ DECLARE_EXPORT int safe_memory_access(bool b_debug_, size_t size_, void (*callba
 	return SUCCESS;
 }
 
+DECLARE_EXPORT void* allocate(bool b_debug_, size_t size_) {
+	void* ptr = malloc(size_);  // Cringe, but the user asked for it :(
+	if (!ptr) {
+		return NULL;
+	}
+	if (b_debug_) {
+		fprintf(stdout, "`memlib.c`: Allocated memory at %p...\n", ptr);
+	}
+	return ptr;
+}
+
+DECLARE_EXPORT int deallocate(bool b_debug_, void* ptr_) {
+	if (!ptr_) {
+		return ERR_NULL_PTR;
+	}
+	if (b_debug_) {
+		fprintf(stdout, "`memlib.c`: Freeing memory at %p...\n", ptr_);
+	}
+	free(ptr_);
+	return SUCCESS;
+}
+
 DECLARE_EXPORT int write(bool b_debug_, void* ptr_, const char* data_, size_t size_) {
 	if (!ptr_) {
 		return ERR_NULL_PTR;

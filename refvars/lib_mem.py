@@ -4,10 +4,11 @@ from os.path import abspath, exists, join, dirname
 from platform import machine
 from sys import platform
 
-arch = machine()
-if arch == "AMD64" and platform == "win32":
+arch = machine().strip().upper()
+platform = platform.strip().upper()
+if arch == "AMD64" and platform == "WIN32":
 	DLL_NAME = "lib_mem_win_x86.dll"
-if arch == "arm64" and platform == "darwin":
+elif arch == "ARM64" and platform == "DARWIN":
 	DLL_NAME = "lib_mem_mac_arm64.dylib"
 else:
 	err_msg = f"Unsupported platform=[{platform}], architecture=[{arch}] combination."
@@ -37,6 +38,14 @@ __read = __lib.read
 __read.argtypes = [_ctypes.c_bool, _ctypes.c_void_p, _ctypes.c_size_t]
 __read.restype = _ctypes.POINTER(_ctypes.c_char)
 
+__allocate = __lib.allocate
+__allocate.argtypes = [_ctypes.c_bool, _ctypes.c_size_t]
+__allocate.restype = _ctypes.c_void_p
+
+__deallocate = __lib.deallocate
+__deallocate.argtypes = [_ctypes.c_bool, _ctypes.c_void_p]
+__deallocate.restype = _ctypes.c_int
+
 
 
 __ERR_FAILED_ALLOC = 1
@@ -62,6 +71,21 @@ def memory_access(size_, callback_:"_Callable[[int],None]") -> "None":
 
 
 
+def _allocate(size_:"int") -> "int":
+	ptr = __allocate(__DEBUG, size_)
+	if not ptr:
+		raise MemoryError("Failed to allocate memory.")
+	return ptr
+
+
+
+def _deallocate(ptr_:"int") -> "int":
+	res = __deallocate(__DEBUG, ptr_)
+	if res != 0:
+		print(MemoryError("Failed to deallocate memory."))
+	return res
+
+
 def write(ptr_:"int", data_:"bytes"):
 	res = __write(__DEBUG, ptr_, data_, len(data_))
 	if res != 0:
@@ -73,7 +97,7 @@ def write(ptr_:"int", data_:"bytes"):
 
 
 def read(ptr_:"int", size_:"int"):
-	res = __read(__DEBUG, ptr_, size_)[:size_]
+	res = __read(True, ptr_, size_)[:size_]
 	if not res:
 		raise MemoryError("Failed to read memory.")
 	return res
