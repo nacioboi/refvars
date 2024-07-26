@@ -571,3 +571,4 @@ DECLARE_EXPORT char* read(bool b_debug_, void* ptr_, size_t size_) {
 	debug_write(b_debug_, "Reading %zd bytes from %p...\n", size_, ptr_);
 	return (char*)ptr_;
 }
+
