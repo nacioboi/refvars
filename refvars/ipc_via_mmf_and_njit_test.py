@@ -30,14 +30,20 @@ import numpy as np
 from numba import njit
 
 @njit(cache=False, fastmath=True)
-def test_alloc():
-	p = alloc(1).unsafe_access(ALLOCATION_TYPE.BOOL)
-	print(p.address)
-	p.write("\x01")
-	print(p.read())
-	p.free()
+def test_alloc(size=1024):
+	for _ in range(size):
+		x = alloc(1024) # Changing this will not affect the performance.
+		# However, repeating this iteration will increase drastically decrease the performance.
+		# TODO: For this reason, we should add a Queue, to both python and c.
+		# TODO: We could even abstract away and cheat a little with the `alloc_handler` by squeezing many requests into one buffer.
+		p = x.unsafe_access(ALLOCATION_TYPE.UINT8)
+		p.write("\x01")
+		p.free()
 
-test_alloc()
+test_alloc(1)
+from timeit import timeit
+print("Benchmarking...")
+print(f"BENCHMARK: Took [{timeit(test_alloc, number=3)}] to allocate, set, and free 1KB of memory.")
 
 exit()
 # @njit(cache=True, fastmath=True)

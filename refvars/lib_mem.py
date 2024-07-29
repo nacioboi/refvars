@@ -38,7 +38,7 @@ __write.restype = _ctypes.c_int
 
 __read = __lib.read
 __read.argtypes = [_ctypes.c_bool, _ctypes.c_void_p, _ctypes.c_size_t, _ctypes.c_void_p]
-__read.restype = None
+__read.restype = _ctypes.c_int
 
 __allocate = __lib.allocate
 __allocate.argtypes = [_ctypes.c_bool, _ctypes.c_size_t]
@@ -64,16 +64,15 @@ def deallocate(debug_:"bool", ptr_:"int") -> "int":
 	return __deallocate(debug_, ptr_)
 
 @_njit(cache=False)
-def write(debug_:"bool", ptr_:"int", data_:"bytes") -> "int":
-	data = np.frombuffer(data_, dtype=np.uint8)
-	return __write(debug_, ptr_, data.ctypes.data, len(data))
+def write(debug_:"bool", ptr_:"int", data_:"np.ndarray") -> "int":
+	return __write(debug_, ptr_, data_.ctypes.data, len(data_))
 
 
 @_njit(cache=False)
-def read(debug_:"bool", ptr_:"int", size_:"int") -> "bytes":
+def read(debug_:"bool", ptr_:"int", size_:"int") -> "tuple[int,np.ndarray]":
 	out = np.zeros(size_, dtype=np.uint8)
-	__read(debug_, ptr_, size_, out.ctypes.data)
-	return out
+	res = __read(debug_, ptr_, size_, out.ctypes.data)
+	return res, out
 
 
 

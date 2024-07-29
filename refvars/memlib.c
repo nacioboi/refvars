@@ -51,6 +51,10 @@ typedef char bool;
 #define DEBUG_PREFIX "[[ `memlib.c` DEBUG ]] "
 
 void debug_write(bool b_enabled_, const char *format, ...) {
+	if (!b_enabled_) {
+		return;
+	}
+	
 	va_list args;
 	va_start(args, format);
 	

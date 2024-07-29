@@ -590,11 +590,12 @@ class Pointer:
 		for i in range(len(data_)):
 			x[i] = ord(data_[i])
 		b = ilist_to_blist_wtf(np.array(x, dtype=np.uint8))
-		print(b"".join(b))
-		return _write(debug_, self.address, b"".join(b))
+		return _write(debug_, self.address, b)
 	
-	def read(self, debug_=False) -> "bytes":
-		return _read(debug_, self.address, self.size)
+	def read(self, debug_=False) -> "tuple[int,bytes]":
+		res, bs = _read(debug_, self.address, self.size)
+		data = ilist_to_blist_wtf(bs)
+		return res, b"".join([b for b in data])
 
 @experimental.jitclass(spec={
 	"__base_size": int64,
