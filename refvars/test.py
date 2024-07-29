@@ -17,7 +17,7 @@ lib_mem.write(ptr, data)
 
 input("Press Enter to stop MMF service...")
 
-data = lib_mem.read(ptr, len(b"Hello, world!"))
+data = lib_mem._read(ptr, len(b"Hello, world!"))
 print("Read data:", data)
 
 res = lib_mem.stop_mmf_service()

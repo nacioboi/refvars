@@ -555,20 +555,21 @@ DECLARE_EXPORT int deallocate(bool b_debug_, void* ptr_) {
 	return SUCCESS;
 }
 
-DECLARE_EXPORT int write(bool b_debug_, void* ptr_, const char* data_, size_t size_) {
+DECLARE_EXPORT int write(bool b_debug_, void* ptr_, void* data_, size_t size_) {
 	if (!ptr_) {
 		return ERR__WRITE__NULL_PTR;
 	}
 	debug_write(b_debug_, "Writing %zd bytes to %p...\n", size_, ptr_);
-	memcpy(ptr_, data_, size_);
+	memcpy(ptr_, (char*)data_, size_);
 	return SUCCESS;
 }
 
-DECLARE_EXPORT char* read(bool b_debug_, void* ptr_, size_t size_) {
+DECLARE_EXPORT int read(bool b_debug_, void* ptr_, size_t size_, void* data_out_) {
 	if (!ptr_) {
-		return NULL;
+		return 1;
 	}
 	debug_write(b_debug_, "Reading %zd bytes from %p...\n", size_, ptr_);
-	return (char*)ptr_;
+	memcpy(data_out_, ptr_, size_);
+	return 0;
 }
 

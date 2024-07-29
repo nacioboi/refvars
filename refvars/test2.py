@@ -13,7 +13,7 @@ print("Got MMF pointer:", ptr)
 data = b"Hello, world!"
 lib_mem.write(ptr, data)
 
-data = lib_mem.read(ptr, len(data))
+data = lib_mem._read(ptr, len(data))
 print("Read data:", data)
 
 res = lib_mem.stop_mmf_service()
