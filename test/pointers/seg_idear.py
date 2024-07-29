@@ -36,10 +36,10 @@ def worker(handler:"refvars.alloc_handler", mem:"refvars.Memory_Wrapper"):
 		lock.write_bool(False)
 
 with refvars.alloc_handler() as (handler, mem):
-	handler.allocate("print_flag", mem.t.BOOL, eq=mem.FALSE)
-	handler.allocate("lock", mem.t.BOOL, eq=mem.FALSE)
-	handler.allocate("buffer", mem.t.CHAR, mem.t.PTR, ptr_size=1024)
-	handler.allocate("exit_flag", mem.t.BOOL, eq=mem.FALSE)
+	handler.allocate("print_flag", mem.t.BOOL, eq_=mem.FALSE)
+	handler.allocate("lock", mem.t.BOOL, eq_=mem.FALSE)
+	handler.allocate("buffer", mem.t.CHAR, mem.t.PTR, ptr_size_=1024)
+	handler.allocate("exit_flag", mem.t.BOOL, eq_=mem.FALSE)
 
 	# Simple test writes.
 	mem.get("print_flag").write_bool(True)        ; assert str(mem.get("print_flag")) == str(mem.TRUE)

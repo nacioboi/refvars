@@ -9,6 +9,7 @@ def times_10(bar:"Reference[int]") -> "None":
 
 my_ref = new[int](10).get_ref()
 times_10(my_ref)
-assert my_ref.get() == 100
+print(my_ref.value)
+assert my_ref.value == 100
 
 print("Success!")

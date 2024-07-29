@@ -257,6 +257,10 @@ class _ALLOC_TYPES (Enum):
 	U_INT_16 = "U_INT_16"
 	INT_32 = "INT_32"
 	U_INT_32 = "U_INT_32"
+	INT_64 = "INT_64"
+	U_INT_64 = "U_INT_64"
+	FLOAT_32 = "FLOAT_32"
+	FLOAT_64 = "FLOAT_64"
 	BOOL = "BOOL"
 	CHAR = "CHAR"
 	PTR = "PTR"
@@ -279,10 +283,19 @@ class _CUSTOM_LOCK:
 		self.acquire()
 		return self
 
-	def __exit__(self, exc_type, exc_value, traceback):
+	def __exit__(self, __,___,____):
 		self.release()
 
+
+
 class Pointer:
+
+	"""
+	Contains the address, size, data size, and type of the memory block.
+	Allows for reading and writing to the memory block.
+	Also checks for invalid arguments like type mismatch.
+	"""
+
 	def __init__(self,
 			addr_:"int", size_:"int",
 			# Private:
@@ -293,8 +306,10 @@ class Pointer:
 			self._lock:"None|_CUSTOM_LOCK" = None
 			self.address = addr_
 			self.size = size_
-			self.typed = None if not _typed_ else _typed_
-			if self.typed and self.typed in [_ALLOC_TYPES.INT_8, _ALLOC_TYPES.U_INT_8, _ALLOC_TYPES.INT_16, _ALLOC_TYPES.U_INT_16]:
+			self.dsize = None if not _typed_ else self._get_data_size(_typed_)
+			self._validate(size_, _typed_)
+			self.__typed = None if not _typed_ else _typed_
+			if self.__typed:
 				self.spread(int(0).to_bytes(self.size, "little"))
 			self._unsafe_free_cb_ = _unsafe_free_cb_
 		else:
@@ -303,6 +318,53 @@ class Pointer:
 			err_msg += f"Instead, use the class `alloc`.\n"
 			raise SyntaxError(err_msg)
 	
+	def _get_data_size(self, types_:"list[_ALLOC_TYPES]") -> "int":
+		if types_ in [[_ALLOC_TYPES.INT_8,], [_ALLOC_TYPES.U_INT_8,]]:
+			return 1 	# 1 byte
+		if types_ in [[_ALLOC_TYPES.INT_16,], [_ALLOC_TYPES.U_INT_16,]]:
+			return 2	# 2 bytes
+		if types_ in [[_ALLOC_TYPES.INT_32,], [_ALLOC_TYPES.U_INT_32,], [_ALLOC_TYPES.FLOAT_32,]]:
+			return 4
+		if types_ in [[_ALLOC_TYPES.INT_64,], [_ALLOC_TYPES.U_INT_64,], [_ALLOC_TYPES.FLOAT_64,]]:
+			return 8
+		if types_ in [[_ALLOC_TYPES.BOOL,]]:
+			return 1
+		if types_ in [[_ALLOC_TYPES.CHAR,]]:
+			return 1
+		if types_ in [
+				[_ALLOC_TYPES.INT_8, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.U_INT_8, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.BOOL, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR,],
+			]:
+			return 1
+		if types_ in [
+				[_ALLOC_TYPES.INT_16, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.U_INT_16, _ALLOC_TYPES.PTR,],
+			]:
+			return 2
+		if types_ in [
+				[_ALLOC_TYPES.INT_32, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.U_INT_32, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.FLOAT_32, _ALLOC_TYPES.PTR,],
+			]:
+			return 4
+		if types_ in [
+				[_ALLOC_TYPES.INT_64, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.U_INT_64, _ALLOC_TYPES.PTR,],
+				[_ALLOC_TYPES.FLOAT_64, _ALLOC_TYPES.PTR,],
+			]:
+			return 8
+		raise ValueError("Type not supported.")
+
+	def _validate(self, size_:"int", types_:"list[_ALLOC_TYPES]|None") -> None:
+		if types_ is None:
+			return
+		if types_[-1] == _ALLOC_TYPES.PTR:
+			return
+		assert len(types_) == 1
+		assert size_ == 1, "Size*DSize mismatch."
+
 	def spread(self, single_byte:"bytes") -> None:
 		assert len(single_byte) == 1
 		self.write(single_byte*self.size)
@@ -330,7 +392,7 @@ class Pointer:
 		return read(self.address, size_)
 
 	def read_int8(self) -> "bytes":
-		if self.typed and self.typed != [_ALLOC_TYPES.INT_8,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
@@ -338,7 +400,7 @@ class Pointer:
 		return read(self.address, self.size)
 	
 	def write_int8(self, value_:"int") -> None:
-		if self.typed and self.typed != [_ALLOC_TYPES.INT_8,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
@@ -346,7 +408,7 @@ class Pointer:
 		write(self.address, value_.to_bytes(1, "little"))
 
 	def read_uint8(self) -> "int":
-		if self.typed and self.typed != [_ALLOC_TYPES.U_INT_8,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.U_INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
@@ -354,7 +416,7 @@ class Pointer:
 		return int.from_bytes(read(self.address, self.size), "little")
 	
 	def write_uint8(self, value_:"int") -> None:
-		if self.typed and self.typed != [_ALLOC_TYPES.U_INT_8,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.U_INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
@@ -362,7 +424,7 @@ class Pointer:
 		write(self.address, value_.to_bytes(1, "little"))
 	
 	def write_bool(self, value_:"bool") -> None:
-		if self.typed and self.typed != [_ALLOC_TYPES.BOOL,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.BOOL,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
@@ -370,7 +432,7 @@ class Pointer:
 		write(self.address, int(0 if value_ is False else 1).to_bytes(1, "little"))
 
 	def read_bool(self) -> "bool":
-		if self.typed and self.typed != [_ALLOC_TYPES.BOOL,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.BOOL,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
@@ -378,7 +440,7 @@ class Pointer:
 		return bool(int.from_bytes(read(self.address, self.size), "little"))
 
 	def write_str(self, value_:"str") -> None:
-		if self.typed and self.typed != [_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
@@ -387,20 +449,20 @@ class Pointer:
 		self.write(value_.encode("utf-8"))
 
 	def clear_str(self) -> None:
-		if self.typed and self.typed != [_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR,]:
+		if self.__typed and self.__typed != [_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
 		self.spread(b"\0")
 
 	def __str__(self) -> str:
-		if self.typed and self.typed == [_ALLOC_TYPES.BOOL,]:
+		if self.__typed and self.__typed == [_ALLOC_TYPES.BOOL,]:
 			return f"{'1' if self.read_bool() == True else '0'}"
-		if self.typed and self.typed == [_ALLOC_TYPES.INT_8,]:
+		if self.__typed and self.__typed == [_ALLOC_TYPES.INT_8,]:
 			return f"{self.read_int8()}"
-		if self.typed and self.typed == [_ALLOC_TYPES.U_INT_8,]:
+		if self.__typed and self.__typed == [_ALLOC_TYPES.U_INT_8,]:
 			return f"{self.read_uint8()}"
-		if self.typed and self.typed == [_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR,]:
+		if self.__typed and self.__typed == [_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR,]:
 			return self.read_str().decode('utf-8')
 		raise ValueError("Type not set.")
 
@@ -418,6 +480,12 @@ class Pointer:
 
 
 class alloc:
+
+	"""
+	Ask the kernel for a memory block of a certain size.
+	We also provide a way to access MFF (Memory Mapped Files), this allows for shared memory between processes.
+	"""
+
 	def safe_access(self, callback_:"Callable[[Pointer],None]") -> "None":
 		from .lib_mem import memory_access
 		def wrapper(_addr_:int) -> None:
@@ -427,8 +495,13 @@ class alloc:
 		memory_access(self.__size, wrapper)
 
 	def unsafe_access(self, *types_:"_ALLOC_TYPES") -> "Pointer":
-		from .lib_mem import _allocate
-		ptr = _allocate(self.__size)
+		from .lib_mem import allocate
+		from .lib_mem import start_mmf_service, stop_mmf_service, get_mmf_ptr
+		if self.__mmf_name:
+			start_mmf_service(self.__mmf_name, self.__size, 0)
+			ptr = get_mmf_ptr()
+		else:
+			ptr = allocate(self.__size)
 		return Pointer(
 			ptr,
 			self.__size,
@@ -437,8 +510,8 @@ class alloc:
 		)
 
 	def _PRIVATE_unsafe_free(self, ptr_:"int") -> "int":
-		from .lib_mem import _deallocate
-		return _deallocate(ptr_)
+		from .lib_mem import deallocate
+		return deallocate(ptr_)
 
 	def _validate(self):
 		# Need to get the line where the class was instantiated.
@@ -473,7 +546,7 @@ class alloc:
 		#	err_msg += f"Please use the `unsafe_access` method with caution.\n"
 		#	raise SyntaxError(err_msg)
 		
-	def __init__(self, size_:"int") -> None:
+	def __init__(self, size_:"int", mmf_name_=None) -> None:
 		global _REF_VARS_SPECIAL_SAUCE
 		global _DO_RUNTIME_USAGE_CHECKS
 		try:
@@ -489,9 +562,11 @@ class alloc:
 				err_msg += f"Please use a size less than {MAX_MALLOC_SIZE_IN_C}.\n"
 				raise ValueError(err_msg)
 			self.__size = size_
+			self.__mmf_name = mmf_name_
 			self._validate()
 		finally:
 			_REF_VARS_SPECIAL_SAUCE = False
+
 
 
 class Memory_Wrapper:
@@ -508,8 +583,16 @@ class Memory_Wrapper:
 	
 
 
-
 class alloc_handler:
+
+	"""
+	A more structured way to handle memory allocation and deallocation.
+	Features include:
+	- Synchronized memory via an address book. Allows for shared memory between processes via MMF (Memory Mapped Files).
+	- Hooks for handling memory changes.
+	- Locking for write operations.
+	"""
+
 	def __LOCK(self, from_address=None) -> "_CUSTOM_LOCK":
 		if from_address:
 			return _CUSTOM_LOCK(from_address)
@@ -523,12 +606,16 @@ class alloc_handler:
 		self.__hooked:"dict[str,list[tuple[str,Callable[[alloc_handler,Memory_Wrapper],None]]]]" = {}
 		self.__prev_state:"dict[str,bytes]" = {}
 		self.__write_locks:"dict[str,_CUSTOM_LOCK]" = {}
+		self.__is_master = False
+		self.__enable_mmf = False
 		from os import path
 		self.__address_book = address_book
 		if self.__address_book:
 			self.__address_book = path.abspath(self.__address_book)
 			if not path.exists(self.__address_book):
 				with open(self.__address_book, "w") as f:
+					self.__is_master = True
+					self.__enable_mmf = True
 					f.write("{}")
 		if self.__address_book:
 			self.__load_from_address_book()
@@ -537,7 +624,7 @@ class alloc_handler:
 		return self, Memory_Wrapper(self.__get)
 	
 	def __exit__(self, exc_type, exc_value, traceback):
-		pass
+		self.shutdown()
 
 	def __push_address(self, name_:"str", addr_:"int", size_:"int", types_:"list[_ALLOC_TYPES]") -> None:
 		from json import load, dump
@@ -570,8 +657,8 @@ class alloc_handler:
 		with open(self.__address_book, "r") as f:
 			data = load(f)
 		def _PRIVATE_unsafe_free(ptr_:"int") -> "int":
-			from .lib_mem import _deallocate
-			return _deallocate(ptr_)
+			from .lib_mem import deallocate
+			return deallocate(ptr_)
 		for name, (addr, size, raw_types_data, lock_attached_ptr_addr) in data.items():
 			types = loads(b64decode(raw_types_data))
 			self.__mapped[name] = types
@@ -580,23 +667,29 @@ class alloc_handler:
 			ptr._lock = self.__write_locks[name]
 			self.__assigned[name] = ptr
 
-	def allocate(self, name_:"str", *types_:"_ALLOC_TYPES", eq:"int|bytes|None"=None, ptr_size:"int|None"=None) -> None:
+	def __allocate(self, name_, ptr_size_, *types_) -> "None":
+			self.__mapped[name_] = [*types_,]
+			self.__write_locks[name_] = self.__LOCK()
+			mmf_name = None if not self.__enable_mmf else name_
+			self.__assigned[name_] = alloc(ptr_size_, mmf_name_=mmf_name)\
+				.unsafe_access(*types_)\
+				._enable_lock(self.__write_locks[name_])
+			if self.__address_book:
+				x = self.__assigned[name_]
+				self.__push_address(name_, x.address, x.size, [*types_,])
+			self.__assigned[name_].spread(b"\0")
+
+	def allocate(self, name_:"str", *types_:"_ALLOC_TYPES", eq_:"int|bytes|None"=None, ptr_size_:"int|None"=None) -> None:
 		if name_ in self.__assigned:
 			return
 		if len(types_) == 1:
 			type_ = types_[0]
-			self.__mapped[name_] = [type_,]
-			self.__write_locks[name_] = self.__LOCK()
-			self.__assigned[name_] = alloc(1)\
-				.unsafe_access(type_)\
-				._enable_lock(self.__write_locks[name_])
-			if eq is not None:
-				assert isinstance(eq, int)
-				self.__assigned[name_].spread(b"\0")
-				self.__assigned[name_].write(eq.to_bytes(1, "little"))
-			if self.__address_book:
-				x = self.__assigned[name_]
-				self.__push_address(name_, x.address, x.size, [*types_,])
+			assert type_ == _ALLOC_TYPES.BOOL or type_ == _ALLOC_TYPES.INT_8 or type_ == _ALLOC_TYPES.U_INT_8
+			ptr_size_ = 1
+			self.__allocate(name_, ptr_size_, types_)
+			if eq_ is not None:
+				assert isinstance(eq_, int)
+				self.__assigned[name_].write(eq_.to_bytes(1, "little"))
 		else:
 			e_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			e_msg += f"Only normal types along with [CHAR, PTR] are supported.\n"
@@ -604,23 +697,16 @@ class alloc_handler:
 				raise ValueError(e_msg)
 			if [*types_,] != [_ALLOC_TYPES.CHAR, _ALLOC_TYPES.PTR]:
 				raise ValueError(e_msg)
-			if ptr_size is None:
+			if ptr_size_ is None:
 				err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 				err_msg += f"Pointer size must be provided.\n"
 				raise ValueError(err_msg)
-			self.__mapped[name_] = [*types_]
-			self.__write_locks[name_] = self.__LOCK()
-			self.__assigned[name_] = alloc(ptr_size)\
-				.unsafe_access(*types_)\
-				._enable_lock(self.__write_locks[name_])
-			if eq is not None:
-				assert isinstance(eq, bytes)
-				assert len(eq) < ptr_size, "Input is too long."
+			self.__allocate(name_, ptr_size_, types_)
+			if eq_ is not None:
+				assert isinstance(eq_, bytes)
+				assert len(eq_) < ptr_size_, "Input is too long."
 				self.__assigned[name_].spread(b"\0")
-				self.__assigned[name_].write(eq)
-			if self.__address_book:
-				x = self.__assigned[name_]
-				self.__push_address(name_, x.address, x.size, [*types_,])
+				self.__assigned[name_].write(eq_)
 		
 	def deallocate(self, name_:"str") -> "int":
 		if name_ not in self.__assigned:
@@ -681,17 +767,18 @@ class alloc_handler:
 			self.__write_locks.clear()
 
 	def shutdown(self, verbose=False) -> "None":
-		while len(self.__assigned) > 0:
-			name = list(self.__assigned.keys())[0]
-			if verbose:
-				print(f"Deallocating: [{name}]...")
-			self.deallocate(name)
+		if self.__is_master:
+			while len(self.__assigned) > 0:
+				name = list(self.__assigned.keys())[0]
+				if verbose:
+					print(f"Deallocating: [{name}]...")
+				self.deallocate(name)
+			if self.__address_book:
+				from os import remove
+				remove(self.__address_book)
 		self.__hooked.clear()
 		self.__prev_state.clear()
 		self.__write_locks.clear()
 		self.__assigned.clear()
 		self.__mapped.clear()
-		if self.__address_book:
-			from os import remove
-			remove(self.__address_book)
 	
