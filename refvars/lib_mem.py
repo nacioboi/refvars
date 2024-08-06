@@ -26,12 +26,6 @@ if not _path.exists(_DLL_PATH):
 
 __lib = _ctypes.CDLL(_DLL_PATH)
 
-__CALLBACK_TYPE = _ctypes.CFUNCTYPE(None, _ctypes.c_void_p)
-
-__safe_mem_acc = __lib.safe_memory_access
-__safe_mem_acc.argtypes = [_ctypes.c_bool, _ctypes.c_size_t, __CALLBACK_TYPE]
-__safe_mem_acc.restype = _ctypes.c_int
-
 __write = __lib.write
 __write.argtypes = [_ctypes.c_bool, _ctypes.c_void_p, _ctypes.c_void_p, _ctypes.c_size_t]
 __write.restype = _ctypes.c_int
@@ -49,11 +43,6 @@ __deallocate.argtypes = [_ctypes.c_bool, _ctypes.c_void_p]
 __deallocate.restype = _ctypes.c_int
 
 
-
-@_njit(cache=True)
-def memory_access(debug_:"bool", size_:"int", callback_:"_Callable[[int],None]") -> "int":
-	c_callback = __CALLBACK_TYPE(callback_)
-	return __safe_mem_acc(debug_, size_, c_callback)
 
 @_njit(cache=False)
 def allocate(debug_:"bool", size_:"int") -> "int":

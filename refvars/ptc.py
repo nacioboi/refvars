@@ -1,6 +1,4 @@
-from typing import Any, Callable
-from refvars import Reference
-
+from typing import Callable
 from numba import njit as _njit
 import ctypes as _ctypes
 import numpy as _np
@@ -28,15 +26,15 @@ class Python_To_C:
 	) -> "None":
 		self.__request_giver = njit_request_giver
 		self.__result_receiver = njit_result_receiver
-		self.__buff = None
-		self.__exit_flag = False
+		self.__buff_defined = False
 		self.request_callback_ctypes = _REQUEST_CALLBACK(self.__request_giver_wrapper)
 		self.result_callback_ctypes = _RESULT_CALLBACK(self.__result_receiver_wrapper)
 
 
 	def __request_giver_wrapper(self, index, ptr, size) -> "bool":
 		data, keep_going = self.__request_giver(index, size)
-		if not self.__buff:
+		if not self.__buff_defined:
+			self.__buff_defined = True
 			self.__buff = _np.frombuffer((_ctypes.c_char*size).from_address(ptr), dtype=_np.uint8)
 		self.__buff[:len(data)] = data
 		return keep_going
@@ -50,7 +48,7 @@ class Python_To_C:
 		dll.service.restype = None
 		self.dll = dll
 	
-	def start_service(self, buff_size, sleep_interval=25):
+	def start_service(self, buff_size, sleep_interval=1):
 		self.dll.service(
 			self.request_callback_ctypes,
 			self.result_callback_ctypes,

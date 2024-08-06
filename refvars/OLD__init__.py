@@ -1,4 +1,5 @@
 from typing import Any, Callable, Generic, Iterator, TypeVar
+import numpy as np
 import inspect
 
 
@@ -382,68 +383,68 @@ class Pointer:
 		else:
 			self.__write(value_)
 	def __write(self, value_:"bytes") -> None:		
-		from .lib_mem import write
+		from .lib_mem import write as _write
 		if len(value_) > self.size:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Out of bounds.\n"
 			raise MemoryError(err_msg)
-		write(self.address, value_)
+		_write(False, self.address, np.frombuffer(value_, dtype=np.uint8))
 	
 	def read(self, size_:"int") -> "bytes":
-		from .lib_mem import _read
+		from .lib_mem import read as _read
 		if size_ > self.size:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Out of bounds.\n"
 			raise MemoryError(err_msg)
-		return _read(self.address, size_)
+		return _read(False, self.address, size_)[1].tobytes()
 
 	def read_int8(self) -> "bytes":
 		if self.__typed and self.__typed != [ALLOCATION_TYPE.INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
-		from .lib_mem import _read
-		return _read(self.address, self.size)
+		return self.read(self.size)
 	
 	def write_int8(self, value_:"int") -> None:
+		from .lib_mem import write as _write
 		if self.__typed and self.__typed != [ALLOCATION_TYPE.INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
-		from .lib_mem import write
-		write(self.address, value_.to_bytes(1, "little"))
+		buff = np.frombuffer(value_.to_bytes(1,"little"), dtype=np.uint8)
+		_write(False, self.address, buff)
 
 	def read_uint8(self) -> "int":
 		if self.__typed and self.__typed != [ALLOCATION_TYPE.U_INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
-		from .lib_mem import _read
-		return int.from_bytes(_read(self.address, self.size), "little")
+		return int.from_bytes(self.read(self.size), "little")
 	
 	def write_uint8(self, value_:"int") -> None:
+		from .lib_mem import write as _write
 		if self.__typed and self.__typed != [ALLOCATION_TYPE.U_INT_8,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
-		from .lib_mem import write
-		write(self.address, value_.to_bytes(1, "little"))
+		buff = np.frombuffer(value_.to_bytes(1,"little"), dtype=np.uint8)
+		_write(False, self.address, buff)
 	
 	def write_bool(self, value_:"bool") -> None:
+		from .lib_mem import write as _write
 		if self.__typed and self.__typed != [ALLOCATION_TYPE.BOOL,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
-		from .lib_mem import write
-		write(self.address, int(0 if value_ is False else 1).to_bytes(1, "little"))
+		buff = np.frombuffer(int(0 if value_ is False else 1).to_bytes(1,"little"), dtype=np.uint8)
+		_write(False, self.address, buff)
 
 	def read_bool(self) -> "bool":
 		if self.__typed and self.__typed != [ALLOCATION_TYPE.BOOL,]:
 			err_msg = "\n\n[[[ ERROR FROM `refvars`! ]]]\n"
 			err_msg += f"Type mismatch.\n"
 			raise ValueError(err_msg)
-		from .lib_mem import _read
-		return bool(int.from_bytes(_read(self.address, self.size), "little"))
+		return bool(int.from_bytes(self.read(self.size), "little"))
 
 	def write_str(self, value_:"str") -> None:
 		if self.__typed and self.__typed != [ALLOCATION_TYPE.CHAR, ALLOCATION_TYPE.PTR,]:
@@ -493,21 +494,21 @@ class alloc:
 	"""
 
 	def safe_access(self, callback_:"Callable[[Pointer],None]") -> "None":
-		from .lib_mem import memory_access
+		from .lib_mem import memory_access as _memory_access
 		def wrapper(_addr_:int) -> None:
 			nonlocal callback_
 			ptr = Pointer(_addr_, self.__size)
 			callback_(ptr)
-		memory_access(self.__size, wrapper)
+		_memory_access(False, self.__size, wrapper)
 
 	def unsafe_access(self, *types_:"ALLOCATION_TYPE") -> "Pointer":
 		from .lib_mem import allocate
 		from .lib_mem import start_mmf_service, stop_mmf_service, get_mmf_ptr
 		if self.__mmf_name:
-			start_mmf_service(self.__mmf_name, self.__size, 0)
-			ptr = get_mmf_ptr()
+			start_mmf_service(False, self.__mmf_name, self.__size, 0)
+			ptr = get_mmf_ptr(False)
 		else:
-			ptr = allocate(self.__size)
+			ptr = allocate(False, self.__size)
 		return Pointer(
 			ptr,
 			self.__size,
@@ -517,7 +518,7 @@ class alloc:
 
 	def _PRIVATE_unsafe_free(self, ptr_:"int") -> "int":
 		from .lib_mem import deallocate
-		return deallocate(ptr_)
+		return deallocate(False, ptr_)
 
 	def _validate(self):
 		# Need to get the line where the class was instantiated.
@@ -664,7 +665,7 @@ class alloc_handler:
 			data = load(f)
 		def _PRIVATE_unsafe_free(ptr_:"int") -> "int":
 			from .lib_mem import deallocate
-			return deallocate(ptr_)
+			return deallocate(False, ptr_)
 		for name, (addr, size, raw_types_data, lock_attached_ptr_addr) in data.items():
 			types = loads(b64decode(raw_types_data))
 			self.__mapped[name] = types
